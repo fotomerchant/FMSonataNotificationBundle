@@ -16,6 +16,9 @@ namespace Sonata\NotificationBundle\Iterator;
 use Sonata\NotificationBundle\Model\MessageInterface;
 use Sonata\NotificationBundle\Model\MessageManagerInterface;
 
+/**
+ * @final since sonata-project/notification-bundle 3.13
+ */
 class ErroneousMessageIterator extends MessageManagerMessageIterator
 {
     /**
@@ -29,12 +32,11 @@ class ErroneousMessageIterator extends MessageManagerMessageIterator
     protected $attemptDelay;
 
     /**
-     * @param MessageManagerInterface $messageManager
-     * @param array                   $types
-     * @param int                     $pause
-     * @param int                     $batchSize
-     * @param int                     $maxAttempts
-     * @param int                     $attemptDelay
+     * @param array $types
+     * @param int   $pause
+     * @param int   $batchSize
+     * @param int   $maxAttempts
+     * @param int   $attemptDelay
      */
     public function __construct(MessageManagerInterface $messageManager, $types = [], $pause = 500000, $batchSize = 10, $maxAttempts = 5, $attemptDelay = 10)
     {
@@ -47,7 +49,7 @@ class ErroneousMessageIterator extends MessageManagerMessageIterator
     /**
      * Find messages in error.
      *
-     * @param $types
+     * @param array $types
      *
      * @return mixed
      */

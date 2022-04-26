@@ -20,11 +20,12 @@ use Sonata\NotificationBundle\Model\MessageManagerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
+/**
+ * @final since sonata-project/notification-bundle 3.13
+ */
 class MessageAdminController extends CRUDController
 {
     /**
-     * @param ProxyQueryInterface $query
-     *
      * @throws AccessDeniedException
      *
      * @return RedirectResponse
@@ -45,8 +46,6 @@ class MessageAdminController extends CRUDController
     }
 
     /**
-     * @param ProxyQueryInterface $query
-     *
      * @throws AccessDeniedException
      *
      * @return RedirectResponse

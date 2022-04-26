@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Sonata\NotificationBundle\Tests\Notification;
+namespace Sonata\NotificationBundle\Tests\Backend;
 
 use PHPUnit\Framework\TestCase;
 use Sonata\NotificationBundle\Backend\RuntimeBackend;
@@ -22,49 +22,49 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class RuntimeBackendTest extends TestCase
 {
-    public function testCreateAndPublish()
+    public function testCreateAndPublish(): void
     {
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
         $backend = new RuntimeBackend($dispatcher);
         $message = $backend->createAndPublish('foo', ['message' => 'salut']);
 
-        $this->assertInstanceOf(MessageInterface::class, $message);
+        static::assertInstanceOf(MessageInterface::class, $message);
 
-        $this->assertSame(MessageInterface::STATE_DONE, $message->getState());
-        $this->assertNotNull($message->getCreatedAt());
-        $this->assertSame('foo', $message->getType());
-        $this->assertSame(['message' => 'salut'], $message->getBody());
+        static::assertSame(MessageInterface::STATE_DONE, $message->getState());
+        static::assertNotNull($message->getCreatedAt());
+        static::assertSame('foo', $message->getType());
+        static::assertSame(['message' => 'salut'], $message->getBody());
     }
 
-    public function testIterator()
+    public function testIterator(): void
     {
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
         $backend = new RuntimeBackend($dispatcher);
 
-        $this->assertInstanceOf('Iterator', $backend->getIterator());
+        static::assertInstanceOf('Iterator', $backend->getIterator());
     }
 
-    public function testHandleSuccess()
+    public function testHandleSuccess(): void
     {
         $message = new Message();
 
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
-        $dispatcher->expects($this->once())->method('dispatch');
+        $dispatcher->expects(static::once())->method('dispatch');
 
         $backend = new RuntimeBackend($dispatcher);
 
         $backend->handle($message, $dispatcher);
-        $this->assertSame(MessageInterface::STATE_DONE, $message->getState());
-        $this->assertNotNull($message->getCreatedAt());
-        $this->assertNotNull($message->getCompletedAt());
+        static::assertSame(MessageInterface::STATE_DONE, $message->getState());
+        static::assertNotNull($message->getCreatedAt());
+        static::assertNotNull($message->getCompletedAt());
     }
 
-    public function testHandleError()
+    public function testHandleError(): void
     {
         $message = new Message();
 
         $dispatcher = $this->createMock(EventDispatcherInterface::class);
-        $dispatcher->expects($this->once())->method('dispatch')->will($this->throwException(new \RuntimeException()));
+        $dispatcher->expects(static::once())->method('dispatch')->will(static::throwException(new \RuntimeException()));
 
         $backend = new RuntimeBackend($dispatcher);
 
@@ -75,10 +75,10 @@ class RuntimeBackendTest extends TestCase
         } catch (HandlingException $e) {
         }
 
-        $this->assertInstanceOf(HandlingException::class, $e);
+        static::assertInstanceOf(HandlingException::class, $e);
 
-        $this->assertSame(MessageInterface::STATE_ERROR, $message->getState());
-        $this->assertNotNull($message->getCreatedAt());
-        $this->assertNotNull($message->getCompletedAt());
+        static::assertSame(MessageInterface::STATE_ERROR, $message->getState());
+        static::assertNotNull($message->getCreatedAt());
+        static::assertNotNull($message->getCompletedAt());
     }
 }

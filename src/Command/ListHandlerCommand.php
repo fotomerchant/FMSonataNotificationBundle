@@ -17,20 +17,17 @@ use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * @final since sonata-project/notification-bundle 3.13
+ */
 class ListHandlerCommand extends ContainerAwareCommand
 {
-    /**
-     * {@inheritdoc}
-     */
     public function configure()
     {
         $this->setName('sonata:notification:list-handler');
         $this->setDescription('List all consumers available');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function execute(InputInterface $input, OutputInterface $output)
     {
         $output->writeln('<info>List of consumers available</info>');
@@ -41,6 +38,8 @@ class ListHandlerCommand extends ContainerAwareCommand
         }
 
         $output->writeln(' done!');
+
+        return 0;
     }
 
     /**

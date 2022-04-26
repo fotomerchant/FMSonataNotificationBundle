@@ -14,30 +14,27 @@ declare(strict_types=1);
 namespace Sonata\NotificationBundle\Entity;
 
 use Doctrine\ORM\QueryBuilder;
-use Sonata\CoreBundle\Model\BaseEntityManager;
 use Sonata\DatagridBundle\Pager\Doctrine\Pager;
-use Sonata\DatagridBundle\ProxyQuery\Doctrine\ProxyQuery;
+use Sonata\DatagridBundle\Pager\PagerInterface;
+use Sonata\Doctrine\Entity\BaseEntityManager;
 use Sonata\NotificationBundle\Model\MessageInterface;
 use Sonata\NotificationBundle\Model\MessageManagerInterface;
 
+/**
+ * @final since sonata-project/notification-bundle 3.13
+ */
 class MessageManager extends BaseEntityManager implements MessageManagerInterface
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function save($message, $andFlush = true)
+    public function save($entity, $andFlush = true)
     {
         //Hack for ConsumerHandlerCommand->optimize()
-        if ($message->getId() && !$this->em->getUnitOfWork()->isInIdentityMap($message)) {
-            $message = $this->getEntityManager()->getUnitOfWork()->merge($message);
+        if ($entity->getId() && !$this->getEntityManager()->getUnitOfWork()->isInIdentityMap($entity)) {
+            $entity = $this->getEntityManager()->getUnitOfWork()->merge($entity);
         }
 
-        parent::save($message, $andFlush);
+        parent::save($entity, $andFlush);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function findByTypes(array $types, $state, $batchSize)
     {
         $params = [];
@@ -48,9 +45,6 @@ class MessageManager extends BaseEntityManager implements MessageManagerInterfac
         return $query->getQuery()->execute();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function findByAttempts(array $types, $state, $batchSize, $maxAttempts = null, $attemptDelay = 10)
     {
         $params = [];
@@ -71,9 +65,6 @@ class MessageManager extends BaseEntityManager implements MessageManagerInterfac
         return $query->getQuery()->execute();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function countStates()
     {
         $tableName = $this->getEntityManager()->getClassMetadata($this->class)->table['name'];
@@ -96,9 +87,6 @@ class MessageManager extends BaseEntityManager implements MessageManagerInterfac
         return $states;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function cleanup($maxAge)
     {
         $tableName = $this->getEntityManager()->getClassMetadata($this->class)->table['name'];
@@ -116,9 +104,6 @@ class MessageManager extends BaseEntityManager implements MessageManagerInterfac
         $qb->getQuery()->execute();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function cancel(MessageInterface $message, $force = false)
     {
         if (($message->isRunning() || $message->isError()) && !$force) {
@@ -130,9 +115,6 @@ class MessageManager extends BaseEntityManager implements MessageManagerInterfac
         $this->save($message);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function restart(MessageInterface $message)
     {
         if ($message->isOpen() || $message->isRunning() || $message->isCancelled()) {
@@ -148,10 +130,7 @@ class MessageManager extends BaseEntityManager implements MessageManagerInterfac
         return $newMessage;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getPager(array $criteria, $page, $limit = 10, array $sort = [])
+    public function getPager(array $criteria, int $page, int $limit = 10, array $sort = []): PagerInterface
     {
         $query = $this->getRepository()
             ->createQueryBuilder('m')
@@ -183,14 +162,8 @@ class MessageManager extends BaseEntityManager implements MessageManagerInterfac
         }
 
         $query->setParameters($parameters);
-        $pager = new Pager();
 
-        $pager->setMaxPerPage($limit);
-        $pager->setQuery(new ProxyQuery($query));
-        $pager->setPage($page);
-        $pager->init();
-
-        return $pager;
+        return Pager::create($query, $limit, $page);
     }
 
     /**

@@ -20,25 +20,22 @@ use Sonata\AdminBundle\Route\RouteCollection;
 use Sonata\AdminBundle\Show\ShowMapper;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 
+/**
+ * @phpstan-extends AbstractAdmin<\Sonata\NotificationBundle\Model\Message>
+ * @final since sonata-project/notification-bundle 3.13
+ */
 class MessageAdmin extends AbstractAdmin
 {
     protected $classnameLabel = 'Message';
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureRoutes(RouteCollection $collection)
     {
         $collection
             ->remove('edit')
             ->remove('create')
-            ->remove('history')
-        ;
+            ->remove('history');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBatchActions()
     {
         $actions = [];
@@ -57,12 +54,9 @@ class MessageAdmin extends AbstractAdmin
         return $actions;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function configureShowFields(ShowMapper $showMapper)
+    protected function configureShowFields(ShowMapper $show)
     {
-        $showMapper
+        $show
             ->add('id')
             ->add('type')
             ->add('createdAt')
@@ -70,36 +64,30 @@ class MessageAdmin extends AbstractAdmin
             ->add('completedAt')
             ->add('getStateName')
             ->add('body')
-            ->add('restartCount')
-        ;
+            ->add('restartCount');
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function configureListFields(ListMapper $listMapper)
+    protected function configureListFields(ListMapper $list)
     {
-        $listMapper
+        $list
             ->addIdentifier('id', null, ['route' => ['name' => 'show']])
             ->add('type')
             ->add('createdAt')
             ->add('startedAt')
             ->add('completedAt')
             ->add('getStateName')
-            ->add('restartCount')
-        ;
+            ->add('restartCount');
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function configureDatagridFilters(DatagridMapper $datagridMapper)
+    protected function configureDatagridFilters(DatagridMapper $filter)
     {
         $class = $this->getClass();
 
-        $datagridMapper
+        $filter
             ->add('type')
-            ->add('state', null, [], ChoiceType::class, ['choices' => $class::getStateList()])
-        ;
+            ->add('state', null, [
+                'field_type' => ChoiceType::class,
+                'field_options' => ['choices' => $class::getStateList()],
+            ]);
     }
 }

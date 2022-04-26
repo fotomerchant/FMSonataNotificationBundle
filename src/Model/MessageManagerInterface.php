@@ -13,52 +13,46 @@ declare(strict_types=1);
 
 namespace Sonata\NotificationBundle\Model;
 
-use Sonata\CoreBundle\Model\ManagerInterface;
-use Sonata\CoreBundle\Model\PageableManagerInterface;
+use Sonata\DatagridBundle\Pager\PageableInterface;
+use Sonata\Doctrine\Model\ManagerInterface;
 
-interface MessageManagerInterface extends ManagerInterface, PageableManagerInterface
+interface MessageManagerInterface extends ManagerInterface, PageableInterface
 {
     /**
-     * @return int
+     * @return array
      */
     public function countStates();
 
     /**
-     * @param $maxAge
+     * @param int $maxAge
      */
     public function cleanup($maxAge);
 
     /**
      * Cancels a given Message.
-     *
-     * @param MessageInterface $message
      */
     public function cancel(MessageInterface $message);
 
     /**
      * Restarts a given message (cancels it and returns a new one, ready for publication).
      *
-     * @param MessageInterface $message
-     *
      * @return MessageInterface $message
      */
     public function restart(MessageInterface $message);
 
     /**
-     * @param array $types
-     * @param int   $state
-     * @param int   $batchSize
+     * @param int $state
+     * @param int $batchSize
      *
      * @return MessageInterface[]
      */
     public function findByTypes(array $types, $state, $batchSize);
 
     /**
-     * @param array $types
-     * @param       $state
-     * @param       $batchSize
-     * @param null  $maxAttempts
-     * @param int   $attemptDelay
+     * @param int      $state
+     * @param int      $batchSize
+     * @param int|null $maxAttempts
+     * @param int      $attemptDelay
      *
      * @return mixed
      */

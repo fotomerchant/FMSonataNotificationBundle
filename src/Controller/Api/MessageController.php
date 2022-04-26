@@ -13,19 +13,22 @@ declare(strict_types=1);
 
 namespace Sonata\NotificationBundle\Controller\Api;
 
-use FOS\RestBundle\Controller\Annotations\QueryParam;
-use FOS\RestBundle\Controller\Annotations\Route;
-use FOS\RestBundle\Controller\Annotations\View;
+use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Request\ParamFetcherInterface;
-use Nelmio\ApiDocBundle\Annotation\ApiDoc;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use Nelmio\ApiDocBundle\Annotation\Operation;
 use Sonata\DatagridBundle\Pager\PagerInterface;
-use Sonata\NotificationBundle\Model\MessageInterface;
+use Sonata\NotificationBundle\Form\Type\MessageSerializationType;
 use Sonata\NotificationBundle\Model\MessageManagerInterface;
+use Swagger\Annotations as SWG;
 use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @author Hugo Briand <briand@ekino.com>
+ *
+ * @final since sonata-project/notification-bundle 3.13
  */
 class MessageController
 {
@@ -39,10 +42,6 @@ class MessageController
      */
     protected $formFactory;
 
-    /**
-     * @param MessageManagerInterface $messageManager
-     * @param FormFactoryInterface    $formFactory
-     */
     public function __construct(MessageManagerInterface $messageManager, FormFactoryInterface $formFactory)
     {
         $this->messageManager = $messageManager;
@@ -52,20 +51,58 @@ class MessageController
     /**
      * Retrieves the list of messages (paginated).
      *
-     * @ApiDoc(
-     *  resource=true,
-     *  output={"class"="Sonata\DatagridBundle\Pager\PagerInterface", "groups"={"sonata_api_read"}}
+     * @Operation(
+     *     tags={"/api/notification/messages"},
+     *     summary="Retrieves the list of messages (paginated).",
+     *     @SWG\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page for message list pagination",
+     *         required=false,
+     *         type="string"
+     *     ),
+     *     @SWG\Parameter(
+     *         name="count",
+     *         in="query",
+     *         description="Number of messages per page",
+     *         required=false,
+     *         type="string"
+     *     ),
+     *     @SWG\Parameter(
+     *         name="type",
+     *         in="query",
+     *         description="Message type filter",
+     *         required=false,
+     *         type="string"
+     *     ),
+     *     @SWG\Parameter(
+     *         name="state",
+     *         in="query",
+     *         description="Message status filter",
+     *         required=false,
+     *         type="string"
+     *     ),
+     *     @SWG\Parameter(
+     *         name="orderBy",
+     *         in="query",
+     *         description="Query groups order by clause (key is field, value is direction)",
+     *         required=false,
+     *         type="string"
+     *     ),
+     *     @SWG\Response(
+     *         response="200",
+     *         description="Returned when successful",
+     *         @SWG\Schema(ref=@Model(type="Sonata\DatagridBundle\Pager\PagerInterface"))
+     *     )
      * )
      *
-     * @QueryParam(name="page", requirements="\d+", default="1", description="Page for message list pagination")
-     * @QueryParam(name="count", requirements="\d+", default="10", description="Number of messages by page")
-     * @QueryParam(name="type", nullable=true, description="Message type filter")
-     * @QueryParam(name="state", requirements="\d+", strict=true, nullable=true, description="Message status filter")
-     * @QueryParam(name="orderBy", map=true, requirements="ASC|DESC", nullable=true, strict=true, description="Query groups order by clause (key is field, value is direction)")
+     * @Rest\QueryParam(name="page", requirements="\d+", default="1", description="Page for message list pagination")
+     * @Rest\QueryParam(name="count", requirements="\d+", default="10", description="Number of messages per page")
+     * @Rest\QueryParam(name="type", nullable=true, description="Message type filter")
+     * @Rest\QueryParam(name="state", requirements="\d+", strict=true, nullable=true, description="Message status filter")
+     * @Rest\QueryParam(name="orderBy", map=true, requirements="ASC|DESC", nullable=true, strict=true, description="Query groups order by clause (key is field, value is direction)")
      *
-     * @View(serializerGroups={"sonata_api_read"}, serializerEnableMaxDepthChecks=true)
-     *
-     * @param ParamFetcherInterface $paramFetcher
+     * @Rest\View(serializerGroups={"sonata_api_read"}, serializerEnableMaxDepthChecks=true)
      *
      * @return PagerInterface
      */
@@ -81,11 +118,9 @@ class MessageController
         $sort = $paramFetcher->get('orderBy');
         $criteria = array_intersect_key($paramFetcher->all(), $supportedCriteria);
 
-        foreach ($criteria as $key => $value) {
-            if (null === $value) {
-                unset($criteria[$key]);
-            }
-        }
+        $criteria = array_filter($criteria, static function ($value): bool {
+            return null !== $value;
+        });
 
         if (!$sort) {
             $sort = [];
@@ -99,34 +134,35 @@ class MessageController
     /**
      * Adds a message.
      *
-     * @ApiDoc(
-     *  input={"class"="sonata_notification_api_form_message", "name"="", "groups"={"sonata_api_write"}},
-     *  output={"class"="Sonata\NotificationBundle\Model\Message", "groups"={"sonata_api_read"}},
-     *  statusCodes={
-     *      200="Returned when successful",
-     *      400="Returned when an error has occurred while message creation"
-     *  }
+     * @Operation(
+     *     tags={"/api/notification/messages"},
+     *     summary="Adds a message.",
+     *     @SWG\Response(
+     *         response="200",
+     *         description="Returned when successful",
+     *         @SWG\Schema(ref=@Model(type="Sonata\NotificationBundle\Model\Message"))
+     *     ),
+     *     @SWG\Response(
+     *         response="400",
+     *         description="Returned when an error has occurred while message creation"
+     *     )
      * )
      *
-     * @View(serializerGroups={"sonata_api_read"}, serializerEnableMaxDepthChecks=true)
+     * @Rest\View(serializerGroups={"sonata_api_read"}, serializerEnableMaxDepthChecks=true)
      *
-     * @Route(requirements={"_format"="json|xml"})
-     *
-     * @param Request $request A Symfony request
-     *
-     * @return MessageInterface
+     * @return FormInterface
      */
     public function postMessageAction(Request $request)
     {
         $message = null;
 
-        $form = $this->formFactory->createNamed(null, 'sonata_notification_api_form_message', $message, [
+        $form = $this->formFactory->createNamed('', MessageSerializationType::class, $message, [
             'csrf_protection' => false,
         ]);
 
         $form->handleRequest($request);
 
-        if ($form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid()) {
             $message = $form->getData();
             $this->messageManager->save($message);
 

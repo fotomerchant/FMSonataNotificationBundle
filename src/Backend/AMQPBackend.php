@@ -19,6 +19,8 @@ use Interop\Amqp\AmqpMessage;
 use Interop\Amqp\AmqpQueue;
 use Interop\Amqp\AmqpTopic;
 use Interop\Amqp\Impl\AmqpBind;
+use Laminas\Diagnostics\Result\Failure;
+use Laminas\Diagnostics\Result\Success;
 use PhpAmqpLib\Channel\AMQPChannel;
 use Sonata\NotificationBundle\Consumer\ConsumerEvent;
 use Sonata\NotificationBundle\Exception\HandlingException;
@@ -26,11 +28,11 @@ use Sonata\NotificationBundle\Iterator\AMQPMessageIterator;
 use Sonata\NotificationBundle\Model\Message;
 use Sonata\NotificationBundle\Model\MessageInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use ZendDiagnostics\Result\Failure;
-use ZendDiagnostics\Result\Success;
 
 /**
  * Consumer side of the rabbitMQ backend.
+ *
+ * @final since sonata-project/notification-bundle 3.13
  */
 class AMQPBackend implements BackendInterface
 {
@@ -105,17 +107,11 @@ class AMQPBackend implements BackendInterface
         $this->prefetchCount = $prefetchCount;
     }
 
-    /**
-     * @param AMQPBackendDispatcher $dispatcher
-     */
     public function setDispatcher(AMQPBackendDispatcher $dispatcher)
     {
         $this->dispatcher = $dispatcher;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function initialize()
     {
         $args = [];
@@ -153,9 +149,6 @@ class AMQPBackend implements BackendInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function publish(MessageInterface $message)
     {
         $body = json_encode([
@@ -176,9 +169,6 @@ class AMQPBackend implements BackendInterface
         $this->getContext()->createProducer()->send($topic, $amqpMessage);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function create($type, array $body)
     {
         $message = new Message();
@@ -189,17 +179,11 @@ class AMQPBackend implements BackendInterface
         return $message;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createAndPublish($type, array $body)
     {
         $this->publish($this->create($type, $body));
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getIterator()
     {
         $context = $this->getContext();
@@ -218,9 +202,6 @@ class AMQPBackend implements BackendInterface
         return new AMQPMessageIterator($context->getLibChannel(), $this->consumer);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function handle(MessageInterface $message, EventDispatcherInterface $dispatcher)
     {
         $event = new ConsumerEvent($message);
@@ -229,7 +210,7 @@ class AMQPBackend implements BackendInterface
         $amqpMessage = $message->getValue('interopMessage');
 
         try {
-            $dispatcher->dispatch($message->getType(), $event);
+            $dispatcher->dispatch($event, $message->getType());
 
             $this->consumer->acknowledge($amqpMessage);
 
@@ -252,9 +233,6 @@ class AMQPBackend implements BackendInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getStatus()
     {
         try {
@@ -266,9 +244,6 @@ class AMQPBackend implements BackendInterface
         return new Success('Channel is running (RabbitMQ)');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function cleanup()
     {
         throw new \RuntimeException('Not implemented');

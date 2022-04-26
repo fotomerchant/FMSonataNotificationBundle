@@ -13,18 +13,22 @@ declare(strict_types=1);
 
 namespace Sonata\NotificationBundle\DependencyInjection;
 
-use Sonata\EasyExtendsBundle\Mapper\DoctrineCollector;
+use Nelmio\ApiDocBundle\Annotation\Operation;
+use Sonata\Doctrine\Mapper\DoctrineCollector;
+use Sonata\EasyExtendsBundle\Mapper\DoctrineCollector as DeprecatedDoctrineCollector;
 use Sonata\NotificationBundle\Backend\AMQPBackend;
 use Sonata\NotificationBundle\Backend\MessageManagerBackend;
 use Sonata\NotificationBundle\Model\MessageInterface;
 use Symfony\Component\Config\FileLocator;
-use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Loader;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
+/**
+ * @final since sonata-project/notification-bundle 3.13
+ */
 class SonataNotificationExtension extends Extension
 {
     /**
@@ -32,9 +36,6 @@ class SonataNotificationExtension extends Extension
      */
     protected $amqpCounter = 0;
 
-    /**
-     * {@inheritdoc}
-     */
     public function load(array $configs, ContainerBuilder $container)
     {
         $configuration = new Configuration();
@@ -44,14 +45,7 @@ class SonataNotificationExtension extends Extension
 
         $this->checkConfiguration($config);
 
-        /*
-         * NEXT_MAJOR: Remove the check for ServiceClosureArgument as well as core_legacy.xml.
-         */
-        if (class_exists(ServiceClosureArgument::class)) {
-            $loader->load('core.xml');
-        } else {
-            $loader->load('core_legacy.xml');
-        }
+        $loader->load('core.xml');
 
         $loader->load('backend.xml');
         $loader->load('consumer.xml');
@@ -65,7 +59,12 @@ class SonataNotificationExtension extends Extension
             $loader->load('event.xml');
 
             if (isset($bundles['FOSRestBundle'], $bundles['NelmioApiDocBundle'])) {
-                $loader->load('api_controllers.xml');
+                // NEXT_MAJOR: remove legacy api
+                if (class_exists(Operation::class)) {
+                    $loader->load('api_controllers.xml');
+                } else {
+                    $loader->load('api_controllers_legacy.xml');
+                }
                 $loader->load('api_form.xml');
             }
 
@@ -83,12 +82,16 @@ class SonataNotificationExtension extends Extension
             $loader->load('checkmonitor.xml');
         }
 
-        $container->setAlias('sonata.notification.backend', $config['backend']);
-        // NEXT_MAJOR: remove this getter when requiring sf3.4+
-        $container->getAlias('sonata.notification.backend')->setPublic(true);
+        $container->setAlias('sonata.notification.backend', $config['backend'])->setPublic(true);
         $container->setParameter('sonata.notification.backend', $config['backend']);
 
-        $this->registerDoctrineMapping($config);
+        if (isset($bundles['SonataDoctrineBundle'])) {
+            $this->registerSonataDoctrineMapping($config);
+        } else {
+            // NEXT MAJOR: Remove next line and throw error when not registering SonataDoctrineBundle
+            $this->registerDoctrineMapping($config);
+        }
+
         $this->registerParameters($container, $config);
         $this->configureBackends($container, $config);
         $this->configureClass($container, $config);
@@ -97,8 +100,7 @@ class SonataNotificationExtension extends Extension
     }
 
     /**
-     * @param ContainerBuilder $container
-     * @param array            $config
+     * @param array $config
      */
     public function configureClass(ContainerBuilder $container, $config)
     {
@@ -110,8 +112,7 @@ class SonataNotificationExtension extends Extension
     }
 
     /**
-     * @param ContainerBuilder $container
-     * @param array            $config
+     * @param array $config
      */
     public function configureAdmin(ContainerBuilder $container, $config)
     {
@@ -121,8 +122,7 @@ class SonataNotificationExtension extends Extension
     }
 
     /**
-     * @param ContainerBuilder $container
-     * @param array            $config
+     * @param array $config
      */
     public function registerParameters(ContainerBuilder $container, $config)
     {
@@ -131,8 +131,7 @@ class SonataNotificationExtension extends Extension
     }
 
     /**
-     * @param ContainerBuilder $container
-     * @param array            $config
+     * @param array $config
      */
     public function configureBackends(ContainerBuilder $container, $config)
     {
@@ -153,23 +152,27 @@ class SonataNotificationExtension extends Extension
             $pause = $config['backends']['doctrine']['pause'];
             $maxAge = $config['backends']['doctrine']['max_age'];
             $batchSize = $config['backends']['doctrine']['batch_size'];
-            $container->setAlias('sonata.notification.manager.message', $config['backends']['doctrine']['message_manager']);
+            $container
+                ->setAlias('sonata.notification.manager.message', $config['backends']['doctrine']['message_manager'])
+                ->setPublic(true);
 
             $this->configureDoctrineBackends($container, $config, $checkLevel, $pause, $maxAge, $batchSize);
-
-            // NEXT_MAJOR: remove this getter when requiring sf3.4+
-            $container->getAlias('sonata.notification.manager.message')->setPublic(true);
         } else {
             $container->removeDefinition('sonata.notification.backend.doctrine');
         }
     }
 
     /**
-     * @param array $config
+     * NEXT_MAJOR: Remove this method.
      */
     public function registerDoctrineMapping(array $config)
     {
-        $collector = DoctrineCollector::getInstance();
+        @trigger_error(
+            'Using SonataEasyExtendsBundle is deprecated since sonata-project/notification-bundle 3.9. Please register SonataDoctrineBundle as a bundle instead.',
+            \E_USER_DEPRECATED
+        );
+
+        $collector = DeprecatedDoctrineCollector::getInstance();
 
         $collector->addIndex($config['class']['message'], 'idx_state', [
             'state',
@@ -180,9 +183,6 @@ class SonataNotificationExtension extends Extension
         ]);
     }
 
-    /**
-     * @param array $config
-     */
     protected function checkConfiguration(array $config)
     {
         if (isset($config['backends']) && \count($config['backends']) > 1) {
@@ -198,10 +198,6 @@ class SonataNotificationExtension extends Extension
         }
     }
 
-    /**
-     * @param ContainerBuilder $container
-     * @param array            $config
-     */
     protected function configureListeners(ContainerBuilder $container, array $config)
     {
         $ids = $config['iteration_listeners'];
@@ -224,12 +220,10 @@ class SonataNotificationExtension extends Extension
     }
 
     /**
-     * @param ContainerBuilder $container
-     * @param array            $config
-     * @param bool             $checkLevel
-     * @param int              $pause
-     * @param int              $maxAge
-     * @param int              $batchSize
+     * @param array $checkLevel
+     * @param int   $pause
+     * @param int   $maxAge
+     * @param int   $batchSize
      *
      * @throws \RuntimeException
      */
@@ -251,6 +245,7 @@ class SonataNotificationExtension extends Extension
 
         $defaultSet = false;
         $declaredQueues = [];
+        $defaultQueue = '';
 
         foreach ($queues as $pos => &$queue) {
             if (\in_array($queue['queue'], $declaredQueues, true)) {
@@ -260,7 +255,7 @@ class SonataNotificationExtension extends Extension
             $declaredQueues[] = $queue['queue'];
 
             // make the configuration compatible with old code and rabbitmq
-            if (isset($queue['routing_key']) && \strlen($queue['routing_key']) > 0) {
+            if (isset($queue['routing_key']) && '' !== $queue['routing_key']) {
                 $queue['types'] = [$queue['routing_key']];
             }
 
@@ -295,19 +290,16 @@ class SonataNotificationExtension extends Extension
         $definition
             ->replaceArgument(1, $queues)
             ->replaceArgument(2, $defaultQueue)
-            ->replaceArgument(3, $qBackends)
-        ;
+            ->replaceArgument(3, $qBackends);
     }
 
     /**
-     * @param ContainerBuilder $container
-     * @param string           $manager
-     * @param bool             $checkLevel
-     * @param int              $pause
-     * @param int              $maxAge
-     * @param int              $batchSize
-     * @param string           $key
-     * @param array            $types
+     * @param string $manager
+     * @param array  $checkLevel
+     * @param int    $pause
+     * @param int    $maxAge
+     * @param int    $batchSize
+     * @param string $key
      *
      * @return string
      */
@@ -327,10 +319,6 @@ class SonataNotificationExtension extends Extension
         return $id;
     }
 
-    /**
-     * @param ContainerBuilder $container
-     * @param array            $config
-     */
     protected function configureRabbitmq(ContainerBuilder $container, array $config)
     {
         $queues = $config['queues'];
@@ -357,12 +345,14 @@ class SonataNotificationExtension extends Extension
         foreach ($deadLetterRoutingKeys as $key) {
             if (!\in_array($key, $routingKeys, true)) {
                 throw new \RuntimeException(sprintf(
-                    'You must configure the queue having the routing_key "%s" same as dead_letter_routing_key', $key
+                    'You must configure the queue having the routing_key "%s" same as dead_letter_routing_key',
+                    $key
                 ));
             }
         }
 
         $declaredQueues = [];
+        $defaultQueue = '';
 
         $defaultSet = false;
         foreach ($queues as $pos => $queue) {
@@ -420,20 +410,18 @@ class SonataNotificationExtension extends Extension
             ->replaceArgument(0, $connection)
             ->replaceArgument(1, $queues)
             ->replaceArgument(2, $defaultQueue)
-            ->replaceArgument(3, $amqBackends)
-        ;
+            ->replaceArgument(3, $amqBackends);
     }
 
     /**
-     * @param ContainerBuilder $container
-     * @param string           $exchange
-     * @param string           $name
-     * @param string           $recover
-     * @param string           $key
-     * @param string           $deadLetterExchange
-     * @param string           $deadLetterRoutingKey
-     * @param int|null         $ttl
-     * @param int|null         $prefetchCount
+     * @param string   $exchange
+     * @param string   $name
+     * @param string   $recover
+     * @param string   $key
+     * @param string   $deadLetterExchange
+     * @param string   $deadLetterRoutingKey
+     * @param int|null $ttl
+     * @param int|null $prefetchCount
      *
      * @return string
      */
@@ -460,15 +448,22 @@ class SonataNotificationExtension extends Extension
         return $id;
     }
 
+    private function registerSonataDoctrineMapping(array $config): void
+    {
+        $collector = DoctrineCollector::getInstance();
+
+        $collector->addIndex($config['class']['message'], 'idx_state', ['state']);
+        $collector->addIndex($config['class']['message'], 'idx_created_at', ['created_at']);
+    }
+
     /**
      * @param string $name
-     * @param array  $queues
      *
      * @return string[]
      */
     private function getQueuesParameters($name, array $queues)
     {
-        $params = array_unique(array_map(function ($q) use ($name) {
+        $params = array_unique(array_map(static function ($q) use ($name) {
             return $q[$name];
         }, $queues));
 
@@ -482,7 +477,6 @@ class SonataNotificationExtension extends Extension
 
     /**
      * @param string $key
-     * @param array  $queues
      *
      * @return string
      */
@@ -493,5 +487,7 @@ class SonataNotificationExtension extends Extension
                 return $queue['dead_letter_exchange'];
             }
         }
+
+        throw new \InvalidArgumentException(sprintf('The key %s was not found', $key));
     }
 }

@@ -13,20 +13,21 @@ declare(strict_types=1);
 
 namespace Sonata\NotificationBundle\Tests\Backend;
 
+use Laminas\Diagnostics\Result\Success;
 use PHPUnit\Framework\TestCase;
 use Sonata\NotificationBundle\Backend\PostponeRuntimeBackend;
 use Sonata\NotificationBundle\Consumer\ConsumerEventInterface;
 use Sonata\NotificationBundle\Model\MessageInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use ZendDiagnostics\Result\Success;
+use Symfony\Component\EventDispatcher\GenericEvent;
 
 /**
  * @covers \Sonata\NotificationBundle\Backend\PostponeRuntimeBackend
  */
 class PostponeRuntimeBackendTest extends TestCase
 {
-    public function testIteratorContainsPublishedMessages()
+    public function testIteratorContainsPublishedMessages(): void
     {
         $backend = new PostponeRuntimeBackend(
             $this->createMock(EventDispatcherInterface::class),
@@ -51,11 +52,11 @@ class PostponeRuntimeBackendTest extends TestCase
 
         $iterator = $backend->getIterator();
         foreach ($iterator as $eachKey => $eachMessage) {
-            $this->assertSame($messages[$eachKey], $eachMessage);
+            static::assertSame($messages[$eachKey], $eachMessage);
         }
     }
 
-    public function testNoMessagesOnEvent()
+    public function testNoMessagesOnEvent(): void
     {
         $backend = $this->getMockBuilder(PostponeRuntimeBackend::class)
             ->setMethods(['handle'])
@@ -63,14 +64,13 @@ class PostponeRuntimeBackendTest extends TestCase
             ->getMock();
 
         $backend
-            ->expects($this->never())
-            ->method('handle')
-        ;
+            ->expects(static::never())
+            ->method('handle');
 
         $backend->onEvent();
     }
 
-    public function testLiveEnvironment()
+    public function testLiveEnvironment(): void
     {
         $dispatcher = new EventDispatcher();
         $backend = new PostponeRuntimeBackend($dispatcher, true);
@@ -84,19 +84,19 @@ class PostponeRuntimeBackendTest extends TestCase
 
         $phpunit = $this;
         $phpunit->passed = false;
-        $dispatcher->addListener('notification.demo', function (ConsumerEventInterface $event) use ($phpunit, $message) {
+        $dispatcher->addListener('notification.demo', static function (ConsumerEventInterface $event) use ($phpunit, $message) {
             $phpunit->assertSame($message, $event->getMessage());
 
             $phpunit->passed = true;
         });
 
-        $dispatcher->dispatch('kernel.terminate');
+        $dispatcher->dispatch(new GenericEvent(), 'kernel.terminate');
 
-        $this->assertTrue($phpunit->passed);
-        $this->assertSame(MessageInterface::STATE_DONE, $message->getState());
+        static::assertTrue($phpunit->passed);
+        static::assertSame(MessageInterface::STATE_DONE, $message->getState());
     }
 
-    public function testRecursiveMessage()
+    public function testRecursiveMessage(): void
     {
         $dispatcher = new EventDispatcher();
         $backend = new PostponeRuntimeBackend($dispatcher, true);
@@ -111,7 +111,7 @@ class PostponeRuntimeBackendTest extends TestCase
         $phpunit->passed1 = false;
         $phpunit->passed2 = false;
 
-        $dispatcher->addListener('notification.demo1', function (ConsumerEventInterface $event) use ($phpunit, $message1, $message2, $backend, $dispatcher) {
+        $dispatcher->addListener('notification.demo1', static function (ConsumerEventInterface $event) use ($phpunit, $message1, $message2, $backend) {
             $phpunit->assertSame($message1, $event->getMessage());
 
             $phpunit->passed1 = true;
@@ -119,37 +119,33 @@ class PostponeRuntimeBackendTest extends TestCase
             $backend->publish($message2);
         });
 
-        $dispatcher->addListener('notification.demo2', function (ConsumerEventInterface $event) use ($phpunit, $message2) {
+        $dispatcher->addListener('notification.demo2', static function (ConsumerEventInterface $event) use ($phpunit, $message2) {
             $phpunit->assertSame($message2, $event->getMessage());
 
             $phpunit->passed2 = true;
         });
 
-        $dispatcher->dispatch('kernel.terminate');
+        $dispatcher->dispatch(new GenericEvent(), 'kernel.terminate');
 
-        $this->assertTrue($phpunit->passed1);
-        $this->assertTrue($phpunit->passed2);
+        static::assertTrue($phpunit->passed1);
+        static::assertTrue($phpunit->passed2);
 
-        $this->assertSame(MessageInterface::STATE_DONE, $message1->getState());
-        $this->assertSame(MessageInterface::STATE_DONE, $message2->getState());
+        static::assertSame(MessageInterface::STATE_DONE, $message1->getState());
+        static::assertSame(MessageInterface::STATE_DONE, $message2->getState());
     }
 
-    public function testStatusIsOk()
+    public function testStatusIsOk(): void
     {
-        if (!class_exists(Success::class)) {
-            $this->markTestSkipped('The class ZendDiagnostics\Result\Success does not exist');
-        }
-
         $backend = new PostponeRuntimeBackend(
             $this->createMock(EventDispatcherInterface::class),
             true
         );
 
         $status = $backend->getStatus();
-        $this->assertInstanceOf(Success::class, $status);
+        static::assertInstanceOf(Success::class, $status);
     }
 
-    public function testOnCliPublishHandlesDirectly()
+    public function testOnCliPublishHandlesDirectly(): void
     {
         $backend = $this->getMockBuilder(PostponeRuntimeBackend::class)
             ->setMethods(['handle'])
@@ -157,9 +153,8 @@ class PostponeRuntimeBackendTest extends TestCase
             ->getMock();
 
         $backend
-            ->expects($this->once())
-            ->method('handle')
-        ;
+            ->expects(static::once())
+            ->method('handle');
 
         $message = $backend->create('notification.demo', []);
         $backend->publish($message);

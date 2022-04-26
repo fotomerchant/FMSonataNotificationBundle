@@ -13,11 +13,10 @@ declare(strict_types=1);
 
 namespace Sonata\NotificationBundle\Backend;
 
+use Laminas\Diagnostics\Result\Success;
 use Sonata\NotificationBundle\Iterator\IteratorProxyMessageIterator;
 use Sonata\NotificationBundle\Model\MessageInterface;
-use Symfony\Component\EventDispatcher\Event;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use ZendDiagnostics\Result\Success;
 
 /**
  * This backend postpones the handling of messages to a registered event.
@@ -27,6 +26,8 @@ use ZendDiagnostics\Result\Success;
  * @see https://gist.github.com/3852361
  *
  * @author Toni Uebernickel <tuebernickel@gmail.com>
+ *
+ * @final since sonata-project/notification-bundle 3.13
  */
 class PostponeRuntimeBackend extends RuntimeBackend
 {
@@ -43,8 +44,7 @@ class PostponeRuntimeBackend extends RuntimeBackend
     protected $postponeOnCli = false;
 
     /**
-     * @param EventDispatcherInterface $dispatcher
-     * @param bool                     $postponeOnCli Whether to postpone the messages on the CLI, too
+     * @param bool $postponeOnCli Whether to postpone the messages on the CLI, too
      */
     public function __construct(EventDispatcherInterface $dispatcher, $postponeOnCli = false)
     {
@@ -53,9 +53,6 @@ class PostponeRuntimeBackend extends RuntimeBackend
         $this->postponeOnCli = $postponeOnCli;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function publish(MessageInterface $message)
     {
         // if the message is generated from the cli the message is handled
@@ -74,10 +71,8 @@ class PostponeRuntimeBackend extends RuntimeBackend
      *
      * Actually, an event is not necessary, you can call this method manually, to.
      * The event is not processed in any way.
-     *
-     * @param Event|null $event
      */
-    public function onEvent(Event $event = null)
+    public function onEvent()
     {
         while (!empty($this->messages)) {
             $message = array_shift($this->messages);
@@ -86,17 +81,11 @@ class PostponeRuntimeBackend extends RuntimeBackend
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getIterator()
     {
         return new IteratorProxyMessageIterator(new \ArrayIterator($this->messages));
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getStatus()
     {
         return new Success('Postpone runtime backend', 'Ok (Postpone Runtime)');

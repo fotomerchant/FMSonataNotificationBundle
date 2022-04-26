@@ -49,10 +49,14 @@ class MessageManagerMessageIterator implements MessageIteratorInterface
     protected $buffer = [];
 
     /**
-     * @param MessageManagerInterface $messageManager
-     * @param array                   $types
-     * @param int                     $pause
-     * @param int                     $batchSize
+     * @var int
+     */
+    protected $pause;
+
+    /**
+     * @param array $types
+     * @param int   $pause
+     * @param int   $batchSize
      */
     public function __construct(MessageManagerInterface $messageManager, $types = [], $pause = 500000, $batchSize = 10)
     {
@@ -63,42 +67,27 @@ class MessageManagerMessageIterator implements MessageIteratorInterface
         $this->batchSize = $batchSize;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function current()
     {
         return $this->current;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function next()
     {
         $this->setCurrent();
         ++$this->counter;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function key()
     {
         return $this->counter;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function valid()
     {
         return true;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function rewind()
     {
         $this->setCurrent();

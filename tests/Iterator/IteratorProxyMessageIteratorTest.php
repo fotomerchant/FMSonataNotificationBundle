@@ -21,66 +21,17 @@ use Sonata\NotificationBundle\Iterator\IteratorProxyMessageIterator;
  */
 class IteratorProxyMessageIteratorTest extends TestCase
 {
-    public function testIteratorProxiesIteratorMethods()
+    public function testIteratorProxiesIteratorMethods(): void
     {
-        $content = [
+        $actualIterator = new \ArrayIterator([
             'foo',
             'bar',
-        ];
-
-        $actualIterator = $this->createMock('Iterator');
-        $this->expectIterator($actualIterator, $content, true);
+        ]);
 
         $proxy = new IteratorProxyMessageIterator($actualIterator);
         foreach ($proxy as $eachKey => $eachEntry) {
-            $this->assertNotNull($eachKey);
-            $this->assertNotEmpty($eachEntry);
+            static::assertNotNull($eachKey);
+            static::assertNotEmpty($eachEntry);
         }
-    }
-
-    /**
-     * @see https://gist.github.com/2852498
-     */
-    public function expectIterator($mock, array $content, $withKey = false, $counter = 0)
-    {
-        $mock
-            ->expects($this->at($counter))
-            ->method('rewind')
-        ;
-
-        foreach ($content as $key => $value) {
-            $mock
-                ->expects($this->at(++$counter))
-                ->method('valid')
-                ->will($this->returnValue(true))
-            ;
-
-            $mock
-                ->expects($this->at(++$counter))
-                ->method('current')
-                ->will($this->returnValue($value))
-            ;
-
-            if ($withKey) {
-                $mock
-                    ->expects($this->at(++$counter))
-                    ->method('key')
-                    ->will($this->returnValue($key))
-                ;
-            }
-
-            $mock
-                ->expects($this->at(++$counter))
-                ->method('next')
-            ;
-        }
-
-        $mock
-            ->expects($this->at(++$counter))
-            ->method('valid')
-            ->will($this->returnValue(false))
-        ;
-
-        return ++$counter;
     }
 }

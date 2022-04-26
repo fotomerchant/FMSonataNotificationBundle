@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Sonata\NotificationBundle\Consumer;
 
+/**
+ * @final since sonata-project/notification-bundle 3.13
+ */
 class Metadata
 {
     /**
@@ -20,9 +23,6 @@ class Metadata
      */
     protected $informations;
 
-    /**
-     * @param array $informations
-     */
     public function __construct(array $informations = [])
     {
         $this->informations = $informations;

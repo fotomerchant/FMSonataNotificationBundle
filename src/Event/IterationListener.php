@@ -21,9 +21,7 @@ namespace Sonata\NotificationBundle\Event;
 interface IterationListener
 {
     /**
-     * @param IterateEvent $event
-     *
-     * @return mixed
+     * @return void
      */
     public function iterate(IterateEvent $event);
 }

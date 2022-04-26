@@ -19,7 +19,7 @@ use Sonata\NotificationBundle\Model\MessageInterface;
 
 class Message extends BaseMessage
 {
-    public function setId($id)
+    public function setId($id): void
     {
         $this->id = $id;
     }
@@ -27,17 +27,17 @@ class Message extends BaseMessage
 
 class BaseMessageTest extends TestCase
 {
-    public function testClone()
+    public function testClone(): void
     {
         $originalMessage = new Message();
         $originalMessage->setId(42);
-        $originalMessage->setBody('body');
+        $originalMessage->setBody(['body']);
         $originalMessage->setState(MessageInterface::STATE_ERROR);
 
         $clonedMessage = clone $originalMessage;
 
-        $this->assertSame('body', $clonedMessage->getBody());
-        $this->assertSame(MessageInterface::STATE_ERROR, $clonedMessage->getState());
-        $this->assertNull($clonedMessage->getId());
+        static::assertSame(['body'], $clonedMessage->getBody());
+        static::assertSame(MessageInterface::STATE_ERROR, $clonedMessage->getState());
+        static::assertNull($clonedMessage->getId());
     }
 }

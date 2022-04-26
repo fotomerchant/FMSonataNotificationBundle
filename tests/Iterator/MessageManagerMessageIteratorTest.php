@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sonata\NotificationBundle\Tests\Iterator;
 
-use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -26,44 +26,44 @@ class MessageManagerMessageIteratorTest extends TestCase
      */
     private $registry;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->registry = $this->createMock(ManagerRegistry::class);
     }
 
-    public function testBufferize()
+    public function testBufferize(): void
     {
         $iterator = new MessageManagerMessageIterator($this->registry, 0);
 
         $iterator->_bufferize();
 
-        $this->assertCount(10, $iterator->getBuffer());
+        static::assertCount(10, $iterator->getBuffer());
     }
 
-    public function testIterations()
+    public function testIterations(): void
     {
         $size = 10;
 
         $iterator = new MessageManagerMessageIterator($this->registry, 0);
 
         $iterator->rewind();
-        $this->assertTrue($iterator->valid());
-        $this->assertNotNull($iterator->current());
+        static::assertTrue($iterator->valid());
+        static::assertNotNull($iterator->current());
 
         $iterator->next();
-        $this->assertTrue($iterator->valid());
-        $this->assertNotNull($iterator->current());
+        static::assertTrue($iterator->valid());
+        static::assertNotNull($iterator->current());
 
         --$size;
         while (--$size >= 1) {
             $iterator->next();
         }
 
-        $this->assertTrue($iterator->valid());
-        $this->assertNotNull($iterator->current());
+        static::assertTrue($iterator->valid());
+        static::assertNotNull($iterator->current());
     }
 
-    public function testLongForeach()
+    public function testLongForeach(): void
     {
         $iterator = new MessageManagerMessageIterator($this->registry, 500000, 2);
 
@@ -71,7 +71,7 @@ class MessageManagerMessageIteratorTest extends TestCase
 
         foreach ($iterator as $message) {
             ++$count;
-            $this->assertNotNull($message);
+            static::assertNotNull($message);
             if ($count > 20) {
                 return;
             }

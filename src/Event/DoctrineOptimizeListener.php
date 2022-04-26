@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Sonata\NotificationBundle\Event;
 
-use Symfony\Bridge\Doctrine\RegistryInterface;
+use Doctrine\Persistence\ManagerRegistry;
 
 /**
  * Doctrine context optimizer
@@ -21,25 +21,21 @@ use Symfony\Bridge\Doctrine\RegistryInterface;
  * Do not use with doctrine backend, use DoctrineBackendOptimizeListener instead.
  *
  * @author Kevin Nedelec <kevin.nedelec@ekino.com>
+ *
+ * @final since sonata-project/notification-bundle 3.13
  */
 class DoctrineOptimizeListener implements IterationListener
 {
     /**
-     * @var Registry
+     * @var ManagerRegistry
      */
     protected $doctrine;
 
-    /**
-     * @param RegistryInterface $doctrine
-     */
-    public function __construct(RegistryInterface $doctrine)
+    public function __construct(ManagerRegistry $doctrine)
     {
         $this->doctrine = $doctrine;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function iterate(IterateEvent $event)
     {
         foreach ($this->doctrine->getManagers() as $name => $manager) {

@@ -5,6 +5,12 @@ labels: bug, unconfirmed
 ---
 
 <!--
+    Since no sonata-maintainer is using this bundle, there is no active support
+    on it. Therefore it's marked as abandoned and issues will be closed. Feel
+    free to make a PR instead if you want to keep this project up to date.
+-->
+
+<!--
     Before you open an issue, make sure this one does not already exist.
     Please also read the "guidelines for contributing" link above before posting.
 -->
@@ -18,17 +24,29 @@ labels: bug, unconfirmed
 
 #### Sonata packages
 
+<details><summary>show</summary>
+<p>
+
 ```
 $ composer show --latest 'sonata-project/*'
 # Put the result here.
 ```
 
+</p>
+</details>
+
 #### Symfony packages
+
+<details><summary>show</summary>
+<p>
 
 ```
 $ composer show --latest 'symfony/*'
 # Put the result here.
 ```
+
+</p>
+</details>
 
 #### PHP version
 
@@ -43,6 +61,8 @@ $ php -v
     Give here as many details as possible.
     Next sections are for ERRORS only.
 -->
+
+## Minimal repository with the bug
 
 ## Steps to reproduce
 

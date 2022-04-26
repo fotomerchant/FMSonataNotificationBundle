@@ -23,12 +23,13 @@ use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
+/**
+ * @final since sonata-project/notification-bundle 3.13
+ */
 class ConsumerHandlerCommand extends ContainerAwareCommand
 {
-    /**
-     * {@inheritdoc}
-     */
     public function configure()
     {
         $this->setName('sonata:notification:start');
@@ -38,9 +39,6 @@ class ConsumerHandlerCommand extends ContainerAwareCommand
         $this->addOption('show-details', 'd', InputOption::VALUE_OPTIONAL, 'Show consumers return details', true);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function execute(InputInterface $input, OutputInterface $output)
     {
         $startDate = new \DateTime();
@@ -115,7 +113,8 @@ class ConsumerHandlerCommand extends ContainerAwareCommand
 
                 $currentMemory = memory_get_usage(true);
 
-                $output->writeln(sprintf('<comment>OK! </comment> - %0.04fs, %ss, %s, %s - %s = %s, %0.02f%%',
+                $output->writeln(sprintf(
+                    '<comment>OK! </comment> - %0.04fs, %ss, %s, %s - %s = %s, %0.02f%%',
                     microtime(true) - $start,
                     $date->format('U') - $message->getCreatedAt()->format('U'),
                     $this->formatMemory($currentMemory - $memoryUsage),
@@ -135,21 +134,23 @@ class ConsumerHandlerCommand extends ContainerAwareCommand
             }
 
             $this->getEventDispatcher()->dispatch(
-                IterateEvent::EVENT_NAME,
-                new IterateEvent($iterator, $backend, $message)
+                new IterateEvent($iterator, $backend, $message),
+                IterateEvent::EVENT_NAME
             );
 
             if ($input->getOption('iteration') && $i >= (int) $input->getOption('iteration')) {
                 $output->writeln('End of iteration cycle');
 
-                return;
+                return 0;
             }
         }
+
+        return 0;
     }
 
     /**
      * @param string $type
-     * @param string $backend
+     * @param object $backend
      *
      * @throws \RuntimeException
      */

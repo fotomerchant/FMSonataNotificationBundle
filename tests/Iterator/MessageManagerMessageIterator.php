@@ -13,10 +13,10 @@ declare(strict_types=1);
 
 namespace Sonata\NotificationBundle\Tests\Iterator;
 
-use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 use Sonata\NotificationBundle\Iterator\MessageManagerMessageIterator as Iterator;
 use Sonata\NotificationBundle\Model\Message;
-use Sonata\NotificationBundle\Tests\Entity\MessageManagerMock;
+use Sonata\NotificationBundle\Tests\Entity\DummyMessageManager;
 
 /**
  * @author Kevin Nedelec <kevin.nedelec@ekino.com>
@@ -26,24 +26,22 @@ class MessageManagerMessageIterator extends Iterator
     public function __construct(ManagerRegistry $registry, $pause = 0, $batchSize = 10)
     {
         parent::__construct(
-            new MessageManagerMock(Message::class, $registry),
+            new DummyMessageManager(Message::class, $registry),
             [],
             $pause,
-            $batchSize);
+            $batchSize
+        );
     }
 
     /**
      * @param array $types
      */
-    public function _bufferize($types = [])
+    public function _bufferize($types = []): void
     {
         $this->bufferize($types);
     }
 
-    /**
-     * @return array
-     */
-    public function getBuffer()
+    public function getBuffer(): array
     {
         return $this->buffer;
     }

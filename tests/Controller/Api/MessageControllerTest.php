@@ -13,8 +13,9 @@ declare(strict_types=1);
 
 namespace Sonata\NotificationBundle\Tests\Controller\Api;
 
-use FOS\RestBundle\Request\ParamFetcher;
+use FOS\RestBundle\Request\ParamFetcherInterface;
 use PHPUnit\Framework\TestCase;
+use Sonata\DatagridBundle\Pager\PagerInterface;
 use Sonata\NotificationBundle\Controller\Api\MessageController;
 use Sonata\NotificationBundle\Model\MessageInterface;
 use Sonata\NotificationBundle\Model\MessageManagerInterface;
@@ -29,71 +30,82 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class MessageControllerTest extends TestCase
 {
-    public function testGetMessagesAction()
+    public function testGetMessagesAction(): void
     {
         $messageManager = $this->createMock(MessageManagerInterface::class);
-        $messageManager->expects($this->once())->method('getPager')->will($this->returnValue([]));
+        $pager = $this->createStub(PagerInterface::class);
+        $messageManager->expects(static::once())->method('getPager')->willReturn($pager);
 
-        $paramFetcher = $this->createMock(ParamFetcher::class);
-        $paramFetcher->expects($this->exactly(3))->method('get');
-        $paramFetcher->expects($this->once())->method('all')->will($this->returnValue([]));
+        $paramFetcher = $this->createMock(ParamFetcherInterface::class);
+        $paramFetcher
+            ->expects(static::exactly(3))
+            ->method('get')
+            ->withConsecutive(
+                ['page'],
+                ['count'],
+                ['orderBy']
+            )->willReturnOnConsecutiveCalls(
+                1,
+                10,
+                'ASC'
+            );
+        $paramFetcher->expects(static::once())->method('all')->willReturn([]);
 
-        $this->assertSame([], $this->createMessageController(null, $messageManager)->getMessagesAction($paramFetcher));
+        static::assertSame($pager, $this->createMessageController(null, $messageManager)->getMessagesAction($paramFetcher));
     }
 
-    public function testPostMessageAction()
+    public function testPostMessageAction(): void
     {
         $message = $this->createMock(MessageInterface::class);
 
         $messageManager = $this->createMock(MessageManagerInterface::class);
-        $messageManager->expects($this->once())->method('save')->will($this->returnValue($message));
+        $messageManager->expects(static::once())->method('save')->willReturn($message);
 
         $form = $this->createMock(Form::class);
-        $form->expects($this->once())->method('handleRequest');
-        $form->expects($this->once())->method('isValid')->will($this->returnValue(true));
-        $form->expects($this->once())->method('getData')->will($this->returnValue($message));
+        $form->expects(static::once())->method('handleRequest');
+        $form->expects(static::once())->method('isSubmitted')->willReturn(true);
+        $form->expects(static::once())->method('isValid')->willReturn(true);
+        $form->expects(static::once())->method('getData')->willReturn($message);
 
         $formFactory = $this->createMock(FormFactoryInterface::class);
-        $formFactory->expects($this->once())->method('createNamed')->will($this->returnValue($form));
+        $formFactory->expects(static::once())->method('createNamed')->willReturn($form);
 
         $message = $this->createMessageController(null, $messageManager, $formFactory)->postMessageAction(new Request());
 
-        $this->assertInstanceOf(MessageInterface::class, $message);
+        static::assertInstanceOf(MessageInterface::class, $message);
     }
 
-    public function testPostMessageInvalidAction()
+    public function testPostMessageInvalidAction(): void
     {
         $message = $this->createMock(MessageInterface::class);
 
         $messageManager = $this->createMock(MessageManagerInterface::class);
-        $messageManager->expects($this->never())->method('save')->will($this->returnValue($message));
+        $messageManager->expects(static::never())->method('save')->willReturn($message);
 
         $form = $this->createMock(Form::class);
-        $form->expects($this->once())->method('handleRequest');
-        $form->expects($this->once())->method('isValid')->will($this->returnValue(false));
+        $form->expects(static::once())->method('handleRequest');
+        $form->expects(static::once())->method('isSubmitted')->willReturn(false);
 
         $formFactory = $this->createMock(FormFactoryInterface::class);
-        $formFactory->expects($this->once())->method('createNamed')->will($this->returnValue($form));
+        $formFactory->expects(static::once())->method('createNamed')->willReturn($form);
 
         $form = $this->createMessageController(null, $messageManager, $formFactory)->postMessageAction(new Request());
 
-        $this->assertInstanceOf(FormInterface::class, $form);
+        static::assertInstanceOf(FormInterface::class, $form);
     }
 
     /**
      * @param $message
      * @param $messageManager
      * @param $formFactory
-     *
-     * @return MessageController
      */
-    public function createMessageController($message = null, $messageManager = null, $formFactory = null)
+    public function createMessageController($message = null, $messageManager = null, $formFactory = null): MessageController
     {
         if (null === $messageManager) {
             $messageManager = $this->createMock(SiteManagerInterface::class);
         }
         if (null !== $message) {
-            $messageManager->expects($this->once())->method('findOneBy')->will($this->returnValue($message));
+            $messageManager->expects(static::once())->method('findOneBy')->willReturn($message);
         }
         if (null === $formFactory) {
             $formFactory = $this->createMock(FormFactoryInterface::class);

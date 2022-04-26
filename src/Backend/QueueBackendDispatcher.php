@@ -38,7 +38,6 @@ abstract class QueueBackendDispatcher implements QueueDispatcherInterface, Backe
     protected $backends;
 
     /**
-     * @param array              $queues
      * @param string             $defaultQueue
      * @param BackendInterface[] $backends
      */
@@ -53,33 +52,21 @@ abstract class QueueBackendDispatcher implements QueueDispatcherInterface, Backe
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function publish(MessageInterface $message)
     {
         $this->getBackend($message->getType())->publish($message);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function create($type, array $body)
     {
         return $this->getBackend($type)->create($type, $body);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function createAndPublish($type, array $body)
     {
         $this->getBackend($type)->createAndPublish($type, $body);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getQueues()
     {
         return $this->queues;

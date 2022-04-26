@@ -13,9 +13,12 @@ declare(strict_types=1);
 
 namespace Sonata\NotificationBundle\Selector;
 
-use Doctrine\Common\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 use Sonata\NotificationBundle\Model\MessageInterface;
 
+/**
+ * @final since sonata-project/notification-bundle 3.13
+ */
 class ErroneousMessagesSelector
 {
     /**
@@ -29,8 +32,7 @@ class ErroneousMessagesSelector
     protected $registry;
 
     /**
-     * @param ManagerRegistry $registry
-     * @param string          $class
+     * @param string $class
      */
     public function __construct(ManagerRegistry $registry, $class)
     {
@@ -41,8 +43,7 @@ class ErroneousMessagesSelector
     /**
      * Retrieve messages with given type(s) and restrict to max attempts count.
      *
-     * @param array $types
-     * @param int   $maxAttempts
+     * @param int $maxAttempts
      *
      * @return array
      */

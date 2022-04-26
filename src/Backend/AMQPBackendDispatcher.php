@@ -18,16 +18,18 @@ use Enqueue\AmqpTools\RabbitMqDlxDelayStrategy;
 use Guzzle\Http\Client as GuzzleClient;
 use Interop\Amqp\AmqpConnectionFactory;
 use Interop\Amqp\AmqpContext;
+use Laminas\Diagnostics\Result\Failure;
+use Laminas\Diagnostics\Result\Success;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPConnection;
 use Sonata\NotificationBundle\Exception\BackendNotFoundException;
 use Sonata\NotificationBundle\Model\MessageInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use ZendDiagnostics\Result\Failure;
-use ZendDiagnostics\Result\Success;
 
 /**
  * Producer side of the rabbitmq backend.
+ *
+ * @final since sonata-project/notification-bundle 3.13
  */
 class AMQPBackendDispatcher extends QueueBackendDispatcher
 {
@@ -63,10 +65,7 @@ class AMQPBackendDispatcher extends QueueBackendDispatcher
     private $context;
 
     /**
-     * @param array  $settings
-     * @param array  $queues
      * @param string $defaultQueue
-     * @param array  $backends
      */
     public function __construct(array $settings, array $queues, $defaultQueue, array $backends)
     {
@@ -82,7 +81,7 @@ class AMQPBackendDispatcher extends QueueBackendDispatcher
      */
     public function getChannel()
     {
-        @trigger_error(sprintf('The method %s is deprecated since version 3.3 and will be removed in 4.0. Use %s::getContext() instead.', __METHOD__, __CLASS__), E_USER_DEPRECATED);
+        @trigger_error(sprintf('The method %s is deprecated since version 3.3 and will be removed in 4.0. Use %s::getContext() instead.', __METHOD__, __CLASS__), \E_USER_DEPRECATED);
 
         if (!$this->channel) {
             if (!$this->context instanceof \Enqueue\AmqpLib\AmqpContext) {
@@ -144,9 +143,6 @@ class AMQPBackendDispatcher extends QueueBackendDispatcher
         return $this->context;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBackend($type)
     {
         if (!$this->backendsInitialized) {
@@ -187,9 +183,6 @@ class AMQPBackendDispatcher extends QueueBackendDispatcher
         return $default;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getIterator()
     {
         throw new \RuntimeException(
@@ -197,9 +190,6 @@ class AMQPBackendDispatcher extends QueueBackendDispatcher
         );
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function handle(MessageInterface $message, EventDispatcherInterface $dispatcher)
     {
         throw new \RuntimeException(
@@ -207,9 +197,6 @@ class AMQPBackendDispatcher extends QueueBackendDispatcher
         );
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getStatus()
     {
         try {
@@ -248,9 +235,6 @@ class AMQPBackendDispatcher extends QueueBackendDispatcher
         return new Success('Channel is running (RabbitMQ) and consumers for all queues available.');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function cleanup()
     {
         throw new \RuntimeException(
@@ -265,9 +249,6 @@ class AMQPBackendDispatcher extends QueueBackendDispatcher
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function initialize()
     {
     }
@@ -289,7 +270,7 @@ class AMQPBackendDispatcher extends QueueBackendDispatcher
         }
 
         $client = new GuzzleClient();
-        $client->setConfig(['curl.options' => [CURLOPT_CONNECTTIMEOUT_MS => 3000]]);
+        $client->setConfig(['curl.options' => [\CURLOPT_CONNECTTIMEOUT_MS => 3000]]);
         $request = $client->get(sprintf('%s/queues', $this->settings['console_url']));
         $request->setAuth($this->settings['user'], $this->settings['pass']);
 

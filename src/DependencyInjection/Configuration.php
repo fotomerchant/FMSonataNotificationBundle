@@ -19,21 +19,16 @@ use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
+/**
+ * @final since sonata-project/notification-bundle 3.13
+ */
 class Configuration implements ConfigurationInterface
 {
-    /**
-     * {@inheritdoc}
-     */
     public function getConfigTreeBuilder()
     {
         $treeBuilder = new TreeBuilder('sonata_notification');
 
-        // Keep compatibility with symfony/config < 4.2
-        if (!method_exists($treeBuilder, 'getRootNode')) {
-            $rootNode = $treeBuilder->root('sonata_notification')->children();
-        } else {
-            $rootNode = $treeBuilder->getRootNode()->children();
-        }
+        $rootNode = $treeBuilder->getRootNode()->children();
 
         $backendInfo = <<<'EOF'
 Other backends you can use:
@@ -151,7 +146,7 @@ EOF;
                 ->addDefaultsIfNotSet()
                 ->children()
                     ->scalarNode('message')
-                        ->defaultValue('Application\\Sonata\\NotificationBundle\\Entity\\Message')
+                        ->defaultValue('App\\Entity\\Message')
                     ->end()
                 ->end()
             ->end()
@@ -179,8 +174,7 @@ EOF;
                         ->end()
                     ->end()
                 ->end()
-            ->end()
-        ;
+            ->end();
 
         return $treeBuilder;
     }
@@ -192,12 +186,7 @@ EOF;
     {
         $treeBuilder = new TreeBuilder('queues');
 
-        // Keep compatibility with symfony/config < 4.2
-        if (!method_exists($treeBuilder, 'getRootNode')) {
-            $node = $treeBuilder->root('queues');
-        } else {
-            $node = $treeBuilder->getRootNode();
-        }
+        $node = $treeBuilder->getRootNode();
 
         $queuesInfo = <<<'EOF'
 Example for using RabbitMQ
@@ -258,8 +247,7 @@ EOF;
         $connectionNode = $node
             ->info($queuesInfo)
             ->requiresAtLeastOneElement()
-            ->prototype('array')
-        ;
+            ->prototype('array');
 
         $connectionNode
             ->children()

@@ -22,12 +22,13 @@ use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
+/**
+ * @final since sonata-project/notification-bundle 3.13
+ */
 class RestartCommand extends ContainerAwareCommand
 {
-    /**
-     * {@inheritdoc}
-     */
     public function configure()
     {
         $this->setName('sonata:notification:restart');
@@ -40,9 +41,6 @@ class RestartCommand extends ContainerAwareCommand
         $this->addOption('batch-size', null, InputOption::VALUE_OPTIONAL, 'Number of message to process on each pull (used only when pulling option is set)', 10);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function execute(InputInterface $input, OutputInterface $output)
     {
         $output->writeln('<info>Starting... </info>');
@@ -61,7 +59,8 @@ class RestartCommand extends ContainerAwareCommand
                 $input->getOption('pause'),
                 $input->getOption('batch-size'),
                 $input->getOption('max-attempts'),
-                $input->getOption('attempt-delay'));
+                $input->getOption('attempt-delay')
+            );
         } else {
             $messages = $this->getErroneousMessageSelector()->getMessages(
                 $input->getOption('type'),
@@ -76,10 +75,11 @@ class RestartCommand extends ContainerAwareCommand
             if (0 === \count($messages)) {
                 $output->writeln('Nothing to restart, bye.');
 
-                return;
+                return 0;
             }
         }
 
+        /** @var EventDispatcherInterface $eventDispatcher */
         $eventDispatcher = $this->getContainer()->get('event_dispatcher');
 
         foreach ($messages as $message) {
@@ -98,11 +98,13 @@ class RestartCommand extends ContainerAwareCommand
             ));
 
             if ($pullMode) {
-                $eventDispatcher->dispatch(IterateEvent::EVENT_NAME, new IterateEvent($messages, null, $newMessage));
+                $eventDispatcher->dispatch(new IterateEvent($messages, null, $newMessage), IterateEvent::EVENT_NAME);
             }
         }
 
         $output->writeln('<info>Done!</info>');
+
+        return 0;
     }
 
     /**

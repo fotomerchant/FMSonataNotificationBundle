@@ -16,12 +16,14 @@ namespace Sonata\NotificationBundle\Event;
 use Sonata\NotificationBundle\Backend\BackendInterface;
 use Sonata\NotificationBundle\Iterator\MessageIteratorInterface;
 use Sonata\NotificationBundle\Model\MessageInterface;
-use Symfony\Component\EventDispatcher\Event;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Event for ConsumerHandlerCommand iterations event.
  *
  * @author Kevin Nedelec <kevin.nedelec@ekino.com>
+ *
+ * @final since sonata-project/notification-bundle 3.13
  */
 class IterateEvent extends Event
 {
@@ -43,11 +45,10 @@ class IterateEvent extends Event
     protected $message;
 
     /**
-     * @param MessageIteratorInterface $iterator
-     * @param BackendInterface         $backend
-     * @param MessageInterface         $message
+     * @param BackendInterface $backend
+     * @param MessageInterface $message
      */
-    public function __construct(MessageIteratorInterface $iterator, BackendInterface $backend = null, MessageInterface $message = null)
+    public function __construct(MessageIteratorInterface $iterator, ?BackendInterface $backend = null, ?MessageInterface $message = null)
     {
         $this->iterator = $iterator;
         $this->backend = $backend;

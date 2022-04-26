@@ -11,31 +11,24 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Sonata\NotificationBundle\Tests\Notification;
+namespace Sonata\NotificationBundle\Tests\Backend;
 
+use Laminas\Diagnostics\Result\Success;
 use PHPUnit\Framework\TestCase;
 use Sonata\NotificationBundle\Backend\BackendHealthCheck;
 use Sonata\NotificationBundle\Backend\BackendInterface;
-use ZendDiagnostics\Result\Success;
 
 class BackendHealthCheckTest extends TestCase
 {
-    public function setUp()
-    {
-        if (!class_exists(Success::class)) {
-            $this->markTestSkipped('ZendDiagnostics\Result\Success does not exist');
-        }
-    }
-
-    public function testCheck()
+    public function testCheck(): void
     {
         $result = new Success('Test check', 'OK');
 
         $backend = $this->createMock(BackendInterface::class);
-        $backend->expects($this->once())->method('getStatus')->will($this->returnValue($result));
+        $backend->expects(static::once())->method('getStatus')->willReturn($result);
 
         $health = new BackendHealthCheck($backend);
 
-        $this->assertSame($result, $health->check());
+        static::assertSame($result, $health->check());
     }
 }

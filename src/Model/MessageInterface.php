@@ -22,9 +22,7 @@ interface MessageInterface
     public const STATE_CANCELLED = -2;
 
     /**
-     * @param array $body
-     *
-     * @return array
+     * @return void
      */
     public function setBody(array $body);
 
@@ -35,7 +33,7 @@ interface MessageInterface
 
     /**
      * @param array|string $names
-     * @param $default
+     * @param mixed        $default
      *
      * @return mixed
      */
@@ -44,7 +42,7 @@ interface MessageInterface
     /**
      * @param \DateTime $completedAt
      */
-    public function setCompletedAt(\DateTime $completedAt = null);
+    public function setCompletedAt(?\DateTime $completedAt = null);
 
     /**
      * @return \DateTime
@@ -54,7 +52,7 @@ interface MessageInterface
     /**
      * @param \DateTime $createdAt
      */
-    public function setCreatedAt(\DateTime $createdAt = null);
+    public function setCreatedAt(?\DateTime $createdAt = null);
 
     /**
      * @return \DateTime
@@ -104,7 +102,7 @@ interface MessageInterface
     /**
      * @param \DateTime $updatedAt
      */
-    public function setUpdatedAt(\DateTime $updatedAt = null);
+    public function setUpdatedAt(?\DateTime $updatedAt = null);
 
     /**
      * @return \DateTime
@@ -114,7 +112,7 @@ interface MessageInterface
     /**
      * @param \DateTime $startedAt
      */
-    public function setStartedAt(\DateTime $startedAt = null);
+    public function setStartedAt(?\DateTime $startedAt = null);
 
     /**
      * @return \DateTime

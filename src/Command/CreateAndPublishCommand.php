@@ -18,11 +18,11 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * @final since sonata-project/notification-bundle 3.13
+ */
 class CreateAndPublishCommand extends ContainerAwareCommand
 {
-    /**
-     * {@inheritdoc}
-     */
     public function configure()
     {
         $this
@@ -31,12 +31,6 @@ class CreateAndPublishCommand extends ContainerAwareCommand
             ->addArgument('body', InputArgument::REQUIRED, 'Body of the notification (json)');
     }
 
-    /**
-     * {@inheritdoc}
-     *
-     * @param InputInterface  $input
-     * @param OutputInterface $output
-     */
     public function execute(InputInterface $input, OutputInterface $output)
     {
         $type = $input->getArgument('type');
@@ -48,9 +42,10 @@ class CreateAndPublishCommand extends ContainerAwareCommand
 
         $this->getContainer()
             ->get('sonata.notification.backend')
-            ->createAndPublish($type, $body)
-        ;
+            ->createAndPublish($type, $body);
 
         $output->writeln('<info>Done !</info>');
+
+        return 0;
     }
 }

@@ -13,8 +13,11 @@ declare(strict_types=1);
 
 namespace Sonata\NotificationBundle\Backend;
 
-use ZendDiagnostics\Check\AbstractCheck;
+use Laminas\Diagnostics\Check\AbstractCheck;
 
+/**
+ * @final since sonata-project/notification-bundle 3.13
+ */
 class BackendHealthCheck extends AbstractCheck
 {
     /**
@@ -22,33 +25,21 @@ class BackendHealthCheck extends AbstractCheck
      */
     protected $backend;
 
-    /**
-     * @param BackendInterface $backend
-     */
     public function __construct(BackendInterface $backend)
     {
         $this->backend = $backend;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function check()
     {
         return $this->backend->getStatus();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getName()
     {
         return 'Sonata Notification Default Backend';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getGroup()
     {
         return 'sonata';

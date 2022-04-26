@@ -18,6 +18,9 @@ use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Message\AMQPMessage;
 use Sonata\NotificationBundle\Model\Message;
 
+/**
+ * @final since sonata-project/notification-bundle 3.13
+ */
 class AMQPMessageIterator implements MessageIteratorInterface
 {
     /**
@@ -82,17 +85,11 @@ class AMQPMessageIterator implements MessageIteratorInterface
         $this->queue = $consumer->getQueue()->getQueueName();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function current()
     {
         return $this->message;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function next()
     {
         $this->isValid = false;
@@ -117,25 +114,16 @@ class AMQPMessageIterator implements MessageIteratorInterface
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function key()
     {
         $this->counter;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function valid()
     {
         return $this->isValid;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function rewind()
     {
         $this->isValid = true;
@@ -144,8 +132,6 @@ class AMQPMessageIterator implements MessageIteratorInterface
 
     /**
      * @deprecated since 3.2, will be removed in 4.x
-     *
-     * @param \Interop\Amqp\AmqpMessage $amqpMessage
      *
      * @return AMQPMessage
      */

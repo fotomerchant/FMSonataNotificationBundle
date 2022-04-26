@@ -13,13 +13,15 @@ declare(strict_types=1);
 
 namespace Sonata\NotificationBundle\Backend;
 
+use Laminas\Diagnostics\Result\Success;
 use Sonata\NotificationBundle\Model\MessageInterface;
 use Sonata\NotificationBundle\Model\MessageManagerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use ZendDiagnostics\Result\Success;
 
 /**
  * Producer side of the doctrine backend.
+ *
+ * @final since sonata-project/notification-bundle 3.13
  */
 class MessageManagerBackendDispatcher extends QueueBackendDispatcher
 {
@@ -34,10 +36,10 @@ class MessageManagerBackendDispatcher extends QueueBackendDispatcher
     protected $default;
 
     /**
+     * NEXT_MAJOR: Remove $messageManager parameter.
+     *
      * @param MessageManagerInterface $messageManager Only used in compiler pass
-     * @param array                   $queues
      * @param string                  $defaultQueue
-     * @param array                   $backends
      */
     public function __construct(MessageManagerInterface $messageManager, array $queues, $defaultQueue, array $backends)
     {
@@ -58,9 +60,6 @@ class MessageManagerBackendDispatcher extends QueueBackendDispatcher
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getBackend($type)
     {
         $default = null;
@@ -78,41 +77,26 @@ class MessageManagerBackendDispatcher extends QueueBackendDispatcher
         return $this->getDefaultBackend();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getIterator()
     {
         throw new \RuntimeException('You need to use a specific doctrine backend supporting the selected queue to run a consumer.');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function handle(MessageInterface $message, EventDispatcherInterface $dispatcher)
     {
         throw new \RuntimeException('You need to use a specific doctrine backend supporting the selected queue to run a consumer.');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getStatus()
     {
         return new Success('Channel is running (Database) and consumers for all queues available.');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function cleanup()
     {
         throw new \RuntimeException('You need to use a specific doctrine backend supporting the selected queue to run a consumer.');
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function initialize()
     {
     }
