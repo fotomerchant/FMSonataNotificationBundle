@@ -18,7 +18,7 @@ use Sonata\NotificationBundle\Event\IterateEvent;
 use Sonata\NotificationBundle\Iterator\ErroneousMessageIterator;
 use Sonata\NotificationBundle\Model\MessageManagerInterface;
 use Sonata\NotificationBundle\Selector\ErroneousMessagesSelector;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -27,7 +27,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 /**
  * @final since sonata-project/notification-bundle 3.13
  */
-class RestartCommand extends ContainerAwareCommand
+class RestartCommand extends Command
 {
     public function configure()
     {

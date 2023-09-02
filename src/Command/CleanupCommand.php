@@ -15,14 +15,14 @@ namespace Sonata\NotificationBundle\Command;
 
 use Sonata\NotificationBundle\Backend\BackendInterface;
 use Sonata\NotificationBundle\Backend\QueueDispatcherInterface;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * @final since sonata-project/notification-bundle 3.13
  */
-class CleanupCommand extends ContainerAwareCommand
+class CleanupCommand extends Command
 {
     public function configure()
     {
